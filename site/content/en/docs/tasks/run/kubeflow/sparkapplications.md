@@ -12,6 +12,47 @@ description: >
 `SparkApplicationIntegration` is currently an alpha feature and is disabled by default.
 
 You can enable it by editing the `SparkApplicationIntegration` feature gate. Check the [Installation](/docs/installation/#change-the-feature-gates-configuration) guide for details on feature gate configuration.
+
+You will also need to register the sparkapplication framework in the configmap `kueue-manager-config` that is located in the `kueue-system` namespace.
+
+See the documentation related to [custom job registration](https://kueue.sigs.k8s.io/docs/tasks/dev/integrate_a_custom_job/#registration).
+
+You may do that either by patching the configmap `kueue-manager-config` directly:
+
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kueue-manager-config
+  namespace: kueue-system
+data:
+  controller_manager_config.yaml: |
+    ...
+    integrations:
+      frameworks:
+      ...
+      - "sparkoperator.k8s.io/sparkapplication"
+      ...
+    ...
+```
+
+Or, if the Kueue controller is managed by Helm, this configmap can be configured using an overlay:
+
+```
+...
+managerConfig:
+  controllerManagerConfigYaml: |-
+    ...
+    integrations:
+      frameworks:
+      ...
+      - "sparkoperator.k8s.io/sparkapplication"
+      ...
+...
+```
+
+In both cases, please make sure not to disable some framework that you need in the process, as the new yaml array under `integrations.framework` will overwrite the default one available in the default [kueue controller values.yaml file](https://github.com/kubernetes-sigs/kueue/blob/main/charts/kueue/values.yaml).
+
 {{% /alert %}}
 
 This page shows how to leverage Kueue's scheduling and resource management capabilities when running [Spark Operator](https://github.com/kubeflow/spark-operator) SparkApplication.
